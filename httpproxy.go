@@ -1,21 +1,21 @@
 package main
 
 import (
-	"net"
-	"log"
-	"strings"
-	"net/url"
-	"io"
-	"time"
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"log"
+	"net"
+	"net/url"
+	"os"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type Config struct {
-	IP string `json:"ip"`
-	Port int `json:"port"`
+	IP      string        `json:"ip"`
+	Port    int           `json:"port"`
 	Timeout time.Duration `json:"timeout"`
 }
 
@@ -27,7 +27,7 @@ func (config *Config) GetTimeout() time.Duration {
 	return config.Timeout * time.Second
 }
 
-func ReadConfig(path string) (config *Config, err error)  {
+func ReadConfig(path string) (config *Config, err error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return
@@ -50,9 +50,9 @@ func main() {
 
 	if len(os.Args) == 1 {
 		config = &Config{
-			IP:"0.0.0.0",
-			Port:8080,
-			Timeout:8,
+			IP:      "0.0.0.0",
+			Port:    8080,
+			Timeout: 8,
 		}
 	} else {
 		var err error
@@ -78,10 +78,10 @@ func main() {
 	}
 }
 
-func handleConn(client net.Conn, timeout time.Duration)  {
+func handleConn(client net.Conn, timeout time.Duration) {
 	defer client.Close()
 
-	var buf[1024] byte
+	var buf [1024]byte
 	n, err := client.Read(buf[:])
 	if err != nil && err != io.EOF {
 		log.Printf("read error: %v\n", err)
