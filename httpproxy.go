@@ -89,37 +89,40 @@ func handleConn(client net.Conn, timeout time.Duration) {
 	}
 
 	data := strings.SplitN(string(buf[:n]), " ", 3)
-	if len(data) >= 3 {
-		parse, err := url.Parse(data[1])
-		if err != nil {
-			log.Printf("parse data[%s] failed: %v\n", data[1], err)
-			return
-		}
-
-		var addr string
-		if parse.Opaque == "443" {
-			addr = parse.Scheme + ":443"
-		} else {
-			if strings.Contains(parse.Host, ":") {
-				addr = parse.Host
-			} else {
-				addr = parse.Host + ":80"
-			}
-		}
-
-		server, err := net.DialTimeout("tcp", addr, timeout)
-		if err != nil {
-			log.Printf("dail to [%s] failed: %v\n", addr, err)
-			return
-		}
-		defer server.Close()
-
-		if data[0] == "CONNECT" {
-			client.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
-		} else {
-			server.Write(buf[:n])
-		}
-		go io.Copy(client, server)
-		io.Copy(server, client)
+	if len(data) < 3 {
+		log.Printf("invalid request: %s\n", string(buf[:n]))
+		return
 	}
+
+	parse, err := url.Parse(data[1])
+	if err != nil {
+		log.Printf("parse data[%s] failed: %v\n", data[1], err)
+		return
+	}
+
+	var addr string
+	if parse.Opaque == "443" {
+		addr = parse.Scheme + ":443"
+	} else {
+		if strings.Contains(parse.Host, ":") {
+			addr = parse.Host
+		} else {
+			addr = parse.Host + ":80"
+		}
+	}
+
+	server, err := net.DialTimeout("tcp", addr, timeout)
+	if err != nil {
+		log.Printf("dial to [%s] failed: %v\n", addr, err)
+		return
+	}
+	defer server.Close()
+
+	if data[0] == "CONNECT" {
+		client.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
+	} else {
+		server.Write(buf[:n])
+	}
+	go io.Copy(client, server)
+	io.Copy(server, client)
 }
