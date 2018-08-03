@@ -20,7 +20,7 @@ type Config struct {
 }
 
 func (config *Config) GetAddr() string {
-	return config.IP + ":" + strconv.Itoa(config.Port)
+	return net.JoinHostPort(config.IP, strconv.Itoa(config.Port))
 }
 
 func (config *Config) GetTimeout() time.Duration {
