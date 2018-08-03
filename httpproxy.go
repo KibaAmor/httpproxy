@@ -17,6 +17,7 @@ type Config struct {
 	IP      string        `json:"ip"`
 	Port    int           `json:"port"`
 	Timeout time.Duration `json:"timeout"`
+	Debug   bool          `json:"debug"`
 }
 
 func (config *Config) GetAddr() string {
@@ -53,6 +54,7 @@ func main() {
 			IP:      "0.0.0.0",
 			Port:    8080,
 			Timeout: 8,
+			Debug:   true,
 		}
 	} else {
 		var err error
@@ -68,17 +70,18 @@ func main() {
 	}
 	log.Println("listen at: " + config.GetAddr())
 	log.Printf("timeout: %s", config.GetTimeout())
+	log.Printf("debug: %v\n", config.Debug)
 
 	for {
 		client, err := listener.Accept()
 		if err != nil {
 			log.Fatalf("accept failed: %v\n", err)
 		}
-		go handleConn(client, config.GetTimeout())
+		go handleConn(client, config.GetTimeout(), config.Debug)
 	}
 }
 
-func handleConn(client net.Conn, timeout time.Duration) {
+func handleConn(client net.Conn, timeout time.Duration, debug bool) {
 	defer client.Close()
 
 	var buf [1024]byte
@@ -109,6 +112,9 @@ func handleConn(client net.Conn, timeout time.Duration) {
 		} else {
 			addr = parse.Host + ":80"
 		}
+	}
+	if debug {
+		log.Printf("%s %s ==> %s\n", data[0], client.RemoteAddr().String(), addr)
 	}
 
 	server, err := net.DialTimeout("tcp", addr, timeout)
